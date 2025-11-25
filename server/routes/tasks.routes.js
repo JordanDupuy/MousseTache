@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Task = require('./mongoose'); // Ton modèle
+const Task = require('../models/mongoose'); // Ton modèle
 
 // ---------------------------------------------------------
 // GET /tasks — Récupérer toutes les tâches (avec filtres + tri)

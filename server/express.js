@@ -3,7 +3,7 @@ const app = express();
 const port = 3111;
 
 app.use(express.json()); // Important !
-app.use('/tasks', require('./tasks.routes'));
+app.use('/tasks', require('./routes/tasks.routes'));
 
 app.get('/', (req, res) => {
   res.send('API Task Manager operational !');
