@@ -54,3 +54,18 @@ const TaskSchema = new mongoose.Schema({
 const Task = mongoose.model("Task", TaskSchema);
 
 module.exports = Task;
+
+// Test
+(async () => {
+  await Task.create({
+    titre: "Test",
+    description: "Premier test",
+    priorite: "haute",
+    statut: "en cours",
+    etiquettes: ["demo"],
+    sousTaches: [{ titre: "Sous tache 1", statut: "à faire" }]
+  });
+
+  console.log("OK !");
+  process.exit();
+})();
