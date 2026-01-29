@@ -8,7 +8,7 @@ const Task = require('../models/mongoose'); // Ton modèle
 router.get('/', async (req, res) => {
   try {
     const filters = {};
-    const { statut, priorite, categorie, etiquette, echeanceAvant, echeanceApres, sort } = req.query;
+    const { statut, priorite, categorie, etiquette, echeanceAvant, echeanceApres, sort, q } = req.query;
 
     if (statut) filters.statut = statut;
     if (priorite) filters.priorite = priorite;
@@ -16,6 +16,10 @@ router.get('/', async (req, res) => {
     if (etiquette) filters.etiquettes = etiquette;
     if (echeanceAvant) filters.echeance = { ...filters.echeance, $lte: new Date(echeanceAvant) };
     if (echeanceApres) filters.echeance = { ...filters.echeance, $gte: new Date(echeanceApres) };
+
+    if (q) {
+      filters.titre = { $regex: q, $options: 'i' };
+    }
 
     const tasks = await Task.find(filters).sort(sort || 'dateCreation');
     res.json(tasks);
