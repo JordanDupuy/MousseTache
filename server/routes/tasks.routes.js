@@ -8,16 +8,45 @@ const Task = require('../models/mongoose'); // Ton modèle
 router.get('/', async (req, res) => {
   try {
     const filters = {};
-    const { statut, priorite, categorie, etiquette, echeanceAvant, echeanceApres, sort } = req.query;
+    const { statut, priorite, categorie, etiquette, echeanceAvant, echeanceApres, sort, q, ordre } = req.query;
 
+    // --- 1. FILTRAGE ---
     if (statut) filters.statut = statut;
     if (priorite) filters.priorite = priorite;
     if (categorie) filters.categorie = categorie;
     if (etiquette) filters.etiquettes = etiquette;
-    if (echeanceAvant) filters.echeance = { ...filters.echeance, $lte: new Date(echeanceAvant) };
-    if (echeanceApres) filters.echeance = { ...filters.echeance, $gte: new Date(echeanceApres) };
+    
+    if (echeanceAvant || echeanceApres) {
+      filters.echeance = {};
+      if (echeanceAvant) filters.echeance.$lte = new Date(echeanceAvant);
+      if (echeanceApres) filters.echeance.$gte = new Date(echeanceApres);
+    }
 
-    const tasks = await Task.find(filters).sort(sort || 'dateCreation');
+    if (q) {
+      filters.titre = { $regex: q, $options: 'i' };
+    }
+
+    // --- 2. RÉCUPÉRATION DES DONNÉES ---
+    let tasks = await Task.find(filters);
+
+    // --- 3. TRI LOGIQUE ---
+    if (sort === 'priorite') {
+      // Définition de l'importance réelle pour le tri
+      const poids = { "critique": 4, "haute": 3, "moyenne": 2, "basse": 1 };
+      
+      tasks.sort((a, b) => {
+        const scoreA = poids[a.priorite] || 0;
+        const scoreB = poids[b.priorite] || 0;
+        
+        // Si 'ordre' est 'desc', on trie du plus grand au plus petit (Critique en premier)
+        return ordre === 'asc' ? scoreB - scoreA : scoreA - scoreB;
+      });
+    } else {
+      // Tri classique (date ou titre) via MongoDB si ce n'est pas la priorité
+      const direction = ordre === 'desc' ? -1 : 1;
+      tasks = await Task.find(filters).sort({ [sort || 'dateCreation']: direction });
+    }
+
     res.json(tasks);
 
   } catch (e) {
