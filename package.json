@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node tests/stats.service.test.js && node tests/tasks.routes.test.js",
+    "test:stats": "node tests/stats.service.test.js",
+    "test:tasks": "node tests/tasks.routes.test.js",
+    "test:all": "npm run test:stats && npm run test:tasks"
   },
   "repository": {
     "type": "git",
@@ -21,6 +24,7 @@
   "dependencies": {
     "cors": "^2.8.6",
     "express": "^5.1.0",
+    "express-validator": "^7.3.1",
     "mongoose": "^8.20.0"
   }
 }

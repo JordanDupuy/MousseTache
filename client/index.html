@@ -5,178 +5,205 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MOUSSETACHE</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/stats.css?v=2">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 </head>
 <body>
     <div id="app" v-cloak>
         <div class="app-container">
             <header>
                 <h1>MOUSSETACHE <span class="logo-icon">🥸</span></h1>
-                <p>Gestionnaire de tâches</p>
+                <p>Gestionnaire de tâches intelligent</p>
+                
+                <!-- ✅ NOUVEAU: Onglets -->
+                <nav class="tabs-navigation">
+                    <button 
+                        @click="switchTab('tasks')"
+                        :class="{ active: activeTab === 'tasks' }"
+                        class="tab-btn">
+                        <i class="fas fa-list"></i> Tâches
+                    </button>
+                    <button 
+                        @click="switchTab('stats')"
+                        :class="{ active: activeTab === 'stats' }"
+                        class="tab-btn">
+                        <i class="fas fa-chart-bar"></i> Statistiques
+                    </button>
+                </nav>
             </header>
 
-            <section class="creation-bar">
-                <form @submit.prevent="createTask" class="flex-form">
-                    <input type="text" v-model="newTask.titre" placeholder="Nouvelle tâche à faire..." required>
-                    <select v-model="newTask.priorite">
-                        <option value="basse">Basse</option>
-                        <option value="moyenne">Moyenne</option>
-                        <option value="haute">Haute</option>
-                        <option value="critique">Critique</option>
-                    </select>
-                    <button type="submit" class="btn-primary"><i class="fas fa-plus"></i> Ajouter</button>
-                </form>
-            </section>
-
-            <section class="filters-bar">
-                <div class="filter-group">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" v-model="filters.q" @input="fetchTasks" placeholder="Rechercher...">
-                </div>
+            <!-- Section Tâches - Masquée quand activeTab === 'stats' -->
+            <div v-show="activeTab === 'tasks'" class="tasks-container">
+                <!-- Code existant des tâches -->
+                <section class="creation-bar">
+                    <form @submit.prevent="createTask" class="flex-form">
+                        <input type="text" v-model="newTask.titre" placeholder="Nouvelle tâche à faire..." required>
+                        <select v-model="newTask.priorite">
+                            <option value="basse">Basse</option>
+                            <option value="moyenne">Moyenne</option>
+                            <option value="haute">Haute</option>
+                            <option value="critique">Critique</option>
+                        </select>
+                        <button type="submit" class="btn-primary"><i class="fas fa-plus"></i> Ajouter</button>
+                    </form>
+                </section>
                 
-                <div class="filter-group">
-                    <label>Statut:</label>
-                    <select v-model="filters.statut" @change="fetchTasks">
-                        <option value="">Tous</option>
-                        <option value="à faire">À faire</option>
-                        <option value="en cours">En cours</option>
-                        <option value="terminée">Terminée</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label>Priorité:</label>
-                    <select v-model="filters.priorite" @change="fetchTasks">
-                        <option value="">Toutes</option>
-                        <option value="critique">Critique</option>
-                        <option value="haute">Haute</option>
-                        <option value="moyenne">Moyenne</option>
-                        <option value="basse">Basse</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label>Trier par:</label>
-                    <select v-model="filters.sort" @change="fetchTasks">
-                        <option value="dateCreation">Date de création</option>
-                        <option value="echeance">Échéance</option>
-                        <option value="priorite">Priorité</option>
-                    </select>
-                </div>
-            </section>
-
-            <main class="task-grid">
-                <div v-for="task in tasks" :key="task._id" 
-                     class="task-card" 
-                     :class="'priority-' + task.priorite"
-                     @click="openModal(task)">
-                    
-                    <div class="card-header">
-                        <span class="badge" :class="'badge-' + task.priorite">{{ task.priorite }}</span>
-                        <button @click.stop="deleteTask(task._id)" class="btn-icon-danger" title="Supprimer">
-                            <i class="fas fa-times"></i>
-                        </button>
+                <section class="filters-bar">
+                    <div class="filter-group">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" v-model="filters.q" @input="fetchTasks" placeholder="Rechercher...">
                     </div>
 
-                    <h3>{{ task.titre }}</h3>
-                    
-                    <div class="card-meta">
-                        <span class="status-pill" :class="task.statut.replace(' ', '-')">{{ task.statut }}</span>
+                    <div class="filter-group">
+                        <label>Statut:</label>
+                        <select v-model="filters.statut" @change="fetchTasks">
+                            <option value="">Tous</option>
+                            <option value="à faire">À faire</option>
+                            <option value="en cours">En cours</option>
+                            <option value="terminée">Terminée</option>
+                        </select>
                     </div>
 
-                    <div class="card-footer">
-                        <span><i class="fas fa-list-ul"></i> {{ task.sousTaches ? task.sousTaches.length : 0 }}</span>
-                        <span><i class="fas fa-comment-alt"></i> {{ task.commentaires ? task.commentaires.length : 0 }}</span>
-                        <span v-if="task.echeance" class="date-display">
-                            <i class="far fa-clock"></i> {{ formatDate(task.echeance) }}
-                        </span>
+                    <div class="filter-group">
+                        <label>Priorité:</label>
+                        <select v-model="filters.priorite" @change="fetchTasks">
+                            <option value="">Toutes</option>
+                            <option value="critique">Critique</option>
+                            <option value="haute">Haute</option>
+                            <option value="moyenne">Moyenne</option>
+                            <option value="basse">Basse</option>
+                        </select>
                     </div>
-                </div>
 
-                <div v-if="tasks.length === 0" class="empty-state">
-                    <p>Aucune tâche ne correspond à vos critères.</p>
-                </div>
-            </main>
-        </div>
+                    <div class="filter-group">
+                        <label>Trier par:</label>
+                        <select v-model="filters.sort" @change="fetchTasks">
+                            <option value="dateCreation">Date de création</option>
+                            <option value="echeance">Échéance</option>
+                            <option value="priorite">Priorité</option>
+                        </select>
+                    </div>
+                </section>
 
-        <div v-if="isModalOpen" class="modal-overlay" @click.self="closeModal">
-            <div class="modal-content">
-                <button class="close-btn" @click="closeModal">&times;</button>
-
-                <div class="modal-header-edit">
-                    <input v-model="currentTask.titre" class="title-input" placeholder="Titre de la tâche">
-                </div>
-
-                <div class="modal-body-grid">
-                    <div class="main-col">
-                        <textarea v-model="currentTask.description" placeholder="Ajouter une description..." rows="3"></textarea>
+                <main class="task-grid">
+                    <div v-for="task in tasks" :key="task._id" 
+                        class="task-card" 
+                        :class="'priority-' + task.priorite"
+                        @click="openModal(task)">
                         
-                        <div class="section-block">
-                            <h4><i class="fas fa-check-double"></i> Sous-tâches</h4>
-                            
-                            <ul class="subtask-list">
-                                <li v-for="sub in currentTask.sousTaches" :key="sub._id">
-                                    <span :class="{ done: sub.statut === 'terminée' }">{{ sub.titre }}</span>
-                                    <button @click="deleteSubtask(sub._id)" class="text-danger">&times;</button>
-                                </li>
-                            </ul>
-
-                            <form @submit.prevent="addSubtask" class="mini-form">
-                                <input v-model="newSubtaskText" placeholder="Nouvelle étape..." required>
-                                <button type="submit">Ajouter</button>
-                            </form>
+                        <div class="card-header">
+                            <span class="badge" :class="'badge-' + task.priorite">{{ task.priorite }}</span>
+                            <button @click.stop="deleteTask(task._id)" class="btn-icon-danger" title="Supprimer">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
 
-                        <div class="section-block">
-                            <h4><i class="far fa-comments"></i> Commentaires</h4>
-                            <div class="comments-list">
-                                <div v-for="comment in currentTask.commentaires" :key="comment._id" class="comment-bubble">
-                                    <div class="comment-header">
-                                        <small>{{ new Date(comment.date).toLocaleString() }}</small>
-                                        <button @click="deleteComment(comment._id)" class="btn-xs">&times;</button>
-                                    </div>
-                                    <p>{{ comment.contenu }}</p>
-                                </div>
-                            </div>
-                            <form @submit.prevent="addComment" class="mini-form">
-                                <input v-model="newCommentText" placeholder="Écrire un commentaire..." required>
-                                <button type="submit">Envoyer</button>
-                            </form>
+                        <h3>{{ task.titre }}</h3>
+                        
+                        <div class="card-meta">
+                            <span class="status-pill" :class="task.statut.replace(' ', '-')">{{ task.statut }}</span>
+                        </div>
+
+                        <div class="card-footer">
+                            <span><i class="fas fa-list-ul"></i> {{ task.sousTaches ? task.sousTaches.length : 0 }}</span>
+                            <span><i class="fas fa-comment-alt"></i> {{ task.commentaires ? task.commentaires.length : 0 }}</span>
+                            <span v-if="task.echeance" class="date-display">
+                                <i class="far fa-clock"></i> {{ formatDate(task.echeance) }}
+                            </span>
                         </div>
                     </div>
 
-                    <div class="side-col">
-                        <div class="control-group">
-                            <label>Statut</label>
-                            <select v-model="currentTask.statut">
-                                <option value="à faire">À faire</option>
-                                <option value="en cours">En cours</option>
-                                <option value="terminée">Terminée</option>
-                                <option value="annulée">Annulée</option>
-                            </select>
+                    <div v-if="tasks.length === 0" class="empty-state">
+                        <p>Aucune tâche ne correspond à vos critères.</p>
+                    </div>
+                </main>
+                <div v-if="isModalOpen" class="modal-overlay" @click.self="closeModal">
+
+                <div class="modal-content">
+                    <button class="close-btn" @click="closeModal">&times;</button>
+
+                    <div class="modal-header-edit">
+                        <input v-model="currentTask.titre" class="title-input" placeholder="Titre de la tâche">
+                    </div>
+
+                    <div class="modal-body-grid">
+                        <div class="main-col">
+                            <textarea v-model="currentTask.description" placeholder="Ajouter une description..." rows="3"></textarea>
+                            
+                            <div class="section-block">
+                                <h4><i class="fas fa-check-double"></i> Sous-tâches</h4>
+                                
+                                <ul class="subtask-list">
+                                    <li v-for="sub in currentTask.sousTaches" :key="sub._id">
+                                        <span :class="{ done: sub.statut === 'terminée' }">{{ sub.titre }}</span>
+                                        <button @click="deleteSubtask(sub._id)" class="text-danger">&times;</button>
+                                    </li>
+                                </ul>
+
+                                <form @submit.prevent="addSubtask" class="mini-form">
+                                    <input v-model="newSubtaskText" placeholder="Nouvelle étape..." required>
+                                    <button type="submit">Ajouter</button>
+                                </form>
+                            </div>
+
+                            <div class="section-block">
+                                <h4><i class="far fa-comments"></i> Commentaires</h4>
+                                <div class="comments-list">
+                                    <div v-for="comment in currentTask.commentaires" :key="comment._id" class="comment-bubble">
+                                        <div class="comment-header">
+                                            <small>{{ new Date(comment.date).toLocaleString() }}</small>
+                                            <button @click="deleteComment(comment._id)" class="btn-xs">&times;</button>
+                                        </div>
+                                        <p>{{ comment.contenu }}</p>
+                                    </div>
+                                </div>
+                                <form @submit.prevent="addComment" class="mini-form">
+                                    <input v-model="newCommentText" placeholder="Écrire un commentaire..." required>
+                                    <button type="submit">Envoyer</button>
+                                </form>
+                            </div>
                         </div>
 
-                        <div class="control-group">
-                            <label>Priorité</label>
-                            <select v-model="currentTask.priorite">
-                                <option value="basse">Basse</option>
-                                <option value="moyenne">Moyenne</option>
-                                <option value="haute">Haute</option>
-                                <option value="critique">Critique</option>
-                            </select>
-                        </div>
+                        <div class="side-col">
+                            <div class="control-group">
+                                <label>Statut</label>
+                                <select v-model="currentTask.statut">
+                                    <option value="à faire">À faire</option>
+                                    <option value="en cours">En cours</option>
+                                    <option value="terminée">Terminée</option>
+                                    <option value="annulée">Annulée</option>
+                                </select>
+                            </div>
 
-                        <div class="control-group">
-                            <label>Échéance</label>
-                            <input type="date" v-model="currentTask.echeanceDateOnly">
-                        </div>
+                            <div class="control-group">
+                                <label>Priorité</label>
+                                <select v-model="currentTask.priorite">
+                                    <option value="basse">Basse</option>
+                                    <option value="moyenne">Moyenne</option>
+                                    <option value="haute">Haute</option>
+                                    <option value="critique">Critique</option>
+                                </select>
+                            </div>
 
-                        <button @click="saveChanges" class="btn-save full-width">
-                            <i class="fas fa-save"></i> Enregistrer
-                        </button>
+                            <div class="control-group">
+                                <label>Échéance</label>
+                                <input type="date" v-model="currentTask.echeanceDateOnly">
+                            </div>
+
+                            <button @click="saveChanges" class="btn-save full-width">
+                                <i class="fas fa-save"></i> Enregistrer
+                            </button>
+                        </div>
                     </div>
                 </div>
+            </div>
+            </div>
+
+            <!-- Section Statistiques - Crée le composant uniquement quand on affiche l'onglet -->
+            <div v-if="activeTab === 'stats'" class="stats-wrapper">
+                <stats-component></stats-component>
             </div>
         </div>
     </div>

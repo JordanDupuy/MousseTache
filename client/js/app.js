@@ -1,11 +1,16 @@
 import { api } from './api.js';
+import StatsComponent from './stats-component.js';
 
 const { createApp } = Vue;
 
 createApp({
+    components: {
+        StatsComponent  // ✅ Ajouter le composant stats
+    },
     data() {
         return {
             tasks: [],
+            activeTab: 'tasks',
             // Filtres liés aux <select> du HTML
             filters: {
                 q: '',       // Recherche texte [cite: 40]
@@ -119,6 +124,10 @@ createApp({
         // Utilitaire pour affichage date
         formatDate(dateStr) {
             return new Date(dateStr).toLocaleDateString();
+        },
+
+        switchTab(tab) {
+            this.activeTab = tab;
         }
     },
     mounted() {
