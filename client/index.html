@@ -90,11 +90,11 @@
                 <main class="task-grid">
                     <div v-for="task in tasks" :key="task._id" 
                         class="task-card" 
-                        :class="'priority-' + task.priorite"
+                        :class="'priority-' + (task.priorite || 'moyenne')"
                         @click="openModal(task)">
                         
                         <div class="card-header">
-                            <span class="badge" :class="'badge-' + task.priorite">{{ task.priorite }}</span>
+                            <span class="badge" :class="'badge-' + (task.priorite || 'moyenne')">{{ task.priorite || 'moyenne' }}</span>
                             <button @click.stop="deleteTask(task._id)" class="btn-icon-danger" title="Supprimer">
                                 <i class="fas fa-times"></i>
                             </button>
@@ -103,7 +103,7 @@
                         <h3>{{ task.titre }}</h3>
                         
                         <div class="card-meta">
-                            <span class="status-pill" :class="task.statut.replace(' ', '-')">{{ task.statut }}</span>
+                            <span class="status-pill" :class="(task.statut || 'à faire').replace(' ', '-')">{{ task.statut || 'à faire' }}</span>
                         </div>
 
                         <div class="card-footer">

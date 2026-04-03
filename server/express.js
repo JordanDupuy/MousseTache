@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const { connectDB } = require('./models/mongoose');
 const app = express();
 const port = 3111;
 
@@ -25,8 +26,19 @@ app.get('/', (req, res) => {
   res.send('API Task Manager operational !');
 });
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+// ✅ Connexion à MongoDB avant de démarrer le serveur
+async function startServer() {
+  try {
+    await connectDB();
+    app.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
 
 module.exports = app;

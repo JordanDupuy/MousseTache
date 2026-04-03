@@ -35,7 +35,8 @@ createApp({
         // Charger les tâches depuis le serveur
         async fetchTasks() {
             try {
-                this.tasks = await api.fetchAll(this.filters);
+                const result = await api.fetchAll(this.filters);
+                this.tasks = result.data || [];
             } catch (e) {
                 console.error("Erreur connexion API:", e);
             }
@@ -61,8 +62,8 @@ createApp({
         
         async openModal(task) {
             // On recharge la tâche pour avoir les sous-tâches/commentaires à jour
-            const fullTask = await api.getOne(task._id);
-            this.currentTask = fullTask;
+            const result = await api.getOne(task._id);
+            this.currentTask = result.data || result;
             
             // Petit hack pour gérer la date dans l'input type="date"
             if (this.currentTask.echeance) {
@@ -99,25 +100,29 @@ createApp({
         async addSubtask() {
             if (!this.newSubtaskText) return;
             // L'API renvoie la tâche mise à jour
-            const updated = await api.addSubtask(this.currentTask._id, this.newSubtaskText);
+            const result = await api.addSubtask(this.currentTask._id, this.newSubtaskText);
+            const updated = result.data || result;
             this.currentTask.sousTaches = updated.sousTaches;
             this.newSubtaskText = '';
         },
 
         async deleteSubtask(subId) {
-            const updated = await api.deleteSubtask(this.currentTask._id, subId);
+            const result = await api.deleteSubtask(this.currentTask._id, subId);
+            const updated = result.data || result;
             this.currentTask.sousTaches = updated.sousTaches;
         },
 
         async addComment() {
             if (!this.newCommentText) return;
-            const updated = await api.addComment(this.currentTask._id, this.newCommentText);
+            const result = await api.addComment(this.currentTask._id, this.newCommentText);
+            const updated = result.data || result;
             this.currentTask.commentaires = updated.commentaires;
             this.newCommentText = '';
         },
 
         async deleteComment(commentId) {
-            const updated = await api.deleteComment(this.currentTask._id, commentId);
+            const result = await api.deleteComment(this.currentTask._id, commentId);
+            const updated = result.data || result;
             this.currentTask.commentaires = updated.commentaires;
         },
 

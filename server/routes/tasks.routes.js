@@ -1,7 +1,7 @@
 const express = require('express');
 const { body, param, query, validationResult } = require('express-validator');
 const router = express.Router();
-const Task = require('../models/mongoose');
+const { Task } = require('../models/mongoose');
 
 // ✅ Middleware pour gérer les erreurs de validation
 const validate = (req, res, next) => {
@@ -77,6 +77,23 @@ router.get('/', asyncHandler(async (req, res) => {
     success: true,
     count: tasks.length,
     data: tasks
+  });
+}));
+
+// GET /tasks/:id
+router.get('/:id', asyncHandler(async (req, res) => {
+  const task = await Task.findById(req.params.id);
+  
+  if (!task) {
+    return res.status(404).json({
+      success: false,
+      error: 'Tâche non trouvée'
+    });
+  }
+
+  res.json({
+    success: true,
+    data: task
   });
 }));
 

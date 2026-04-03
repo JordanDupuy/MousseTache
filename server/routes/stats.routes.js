@@ -6,7 +6,7 @@
 
 const express = require('express');
 const router = express.Router();
-const Task = require('../models/mongoose');
+const { Task } = require('../models/mongoose');
 
 // Importer le service de stats
 const StatsService = require('../services/stats.service');
